@@ -198,31 +198,27 @@
     
   
     [pan setTranslation:CGPointZero inView:view];
+    NSLog(@"adasa%f",view.frame.origin.x);
+    
+    if (view.frame.origin.x < Width4SuperView/6-5) {
+        [view removeFromSuperview];
+        
+    }
+    
+    
+    
 
 }
 
 - (void)LongAction:(UIButton *)sender
 {
-//    UIView *view  = [[UIView alloc]init];
-//    view.frame = CGRectMake(CGRectGetMidX(_view.frame), CGRectGetMidY(_view.frame), Width4SuperView/6, 130);
-//    view.backgroundColor = [UIColor cyanColor];
-//   
-//    NSString *path = MutArray[2];
-//    kxMovie = [KxMovieViewController movieViewControllerWithContentPath:path parameters:nil];
-//    kxMovie.view.frame = CGRectMake(0, 0, Width4SuperView/6, 130);
-//    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panAction:)];
-//    [kxMovie.view addGestureRecognizer:pan];
-//    [self.view addSubview:kxMovie.view];
-////    [self addChildViewController:kxMovie];
-//    [self.view addSubview:view];
-  
-    
+
     if (index == 0) {
         index ++;
         NSString *path = MutArray[_LongPressCount];
         NSLog(@"adadad%ld",(long)_LongPressCount);
         kxMovie = [KxMovieViewController movieViewControllerWithContentPath:path parameters:nil];
-        kxMovie.view.frame = CGRectMake(0, 0,  Width4SuperView/6, 130);
+        kxMovie.view.frame = CGRectMake(Width4SuperView/6+5, 67,  Width4SuperView/6, 130);
         
         kxMovie.view.backgroundColor = [UIColor grayColor];
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panAction:)];
@@ -237,7 +233,10 @@
 
 - (void)buttonAction:(UIButton *)button
 {
-
+    
+    _temp = nil;
+    _LongPressCount = 0;
+    
     for (int i = 0; i < _CountArray.count; i++) {
         
         NSInteger inter = (NSInteger)(button.tag - 330);

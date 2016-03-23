@@ -19,6 +19,10 @@
 		0B0D038B1C9807FB002E8038 /* NSLayoutConstraint+MASDebugAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0D037D1C9807FB002E8038 /* NSLayoutConstraint+MASDebugAdditions.m */; };
 		0B0D038C1C9807FB002E8038 /* View+MASAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0D037F1C9807FB002E8038 /* View+MASAdditions.m */; };
 		0B0D038D1C9807FB002E8038 /* ViewController+MASAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0D03821C9807FB002E8038 /* ViewController+MASAdditions.m */; };
+		0B33F0F11CA272CC00465DC7 /* 十六分屏.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B33F0EE1CA272CC00465DC7 /* 十六分屏.png */; };
+		0B33F0F21CA272CC00465DC7 /* 九分屏.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B33F0EF1CA272CC00465DC7 /* 九分屏.png */; };
+		0B33F0F61CA2742900465DC7 /* 四分屏.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B33F0F51CA2742900465DC7 /* 四分屏.png */; };
+		0B33F0F81CA2803800465DC7 /* 1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B33F0F71CA2803800465DC7 /* 1.png */; };
 		0B3B7AEE1CA12A38009112C7 /* 会议模式.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B3B7AE41CA12A38009112C7 /* 会议模式.png */; };
 		0B3B7AEF1CA12A38009112C7 /* 循环模式.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B3B7AE51CA12A38009112C7 /* 循环模式.png */; };
 		0B3B7AF01CA12A38009112C7 /* 指挥模式.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B3B7AE61CA12A38009112C7 /* 指挥模式.png */; };
@@ -96,6 +100,10 @@
 		0B0D03801C9807FB002E8038 /* View+MASShorthandAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "View+MASShorthandAdditions.h"; sourceTree = "<group>"; };
 		0B0D03811C9807FB002E8038 /* ViewController+MASAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ViewController+MASAdditions.h"; sourceTree = "<group>"; };
 		0B0D03821C9807FB002E8038 /* ViewController+MASAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "ViewController+MASAdditions.m"; sourceTree = "<group>"; };
+		0B33F0EE1CA272CC00465DC7 /* 十六分屏.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "十六分屏.png"; sourceTree = "<group>"; };
+		0B33F0EF1CA272CC00465DC7 /* 九分屏.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "九分屏.png"; sourceTree = "<group>"; };
+		0B33F0F51CA2742900465DC7 /* 四分屏.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "四分屏.png"; sourceTree = "<group>"; };
+		0B33F0F71CA2803800465DC7 /* 1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1.png; sourceTree = "<group>"; };
 		0B3B7AE41CA12A38009112C7 /* 会议模式.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "会议模式.png"; sourceTree = "<group>"; };
 		0B3B7AE51CA12A38009112C7 /* 循环模式.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "循环模式.png"; sourceTree = "<group>"; };
 		0B3B7AE61CA12A38009112C7 /* 指挥模式.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "指挥模式.png"; sourceTree = "<group>"; };
@@ -362,6 +370,10 @@
 				0B3B7AEB1CA12A38009112C7 /* 监控模式.png */,
 				0B3B7AF81CA12BBA009112C7 /* 应急.png */,
 				0B3B7B081CA15B0E009112C7 /* 向下.png */,
+				0B33F0EE1CA272CC00465DC7 /* 十六分屏.png */,
+				0B33F0EF1CA272CC00465DC7 /* 九分屏.png */,
+				0B33F0F51CA2742900465DC7 /* 四分屏.png */,
+				0B33F0F71CA2803800465DC7 /* 1.png */,
 			);
 			path = iconPNG;
 			sourceTree = "<group>";
@@ -715,18 +727,22 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B33F0F61CA2742900465DC7 /* 四分屏.png in Resources */,
 				0B3B7AF91CA12BBA009112C7 /* 应急.png in Resources */,
 				0B3B7B011CA14BF5009112C7 /* 灯光控制.png in Resources */,
 				0B3B7B051CA14BF5009112C7 /* 显示格式.png in Resources */,
 				CFA795B61AF5F1BB00E56796 /* Main.storyboard in Resources */,
 				0B3B7B021CA14BF5009112C7 /* 摄像头.png in Resources */,
+				0B33F0F11CA272CC00465DC7 /* 十六分屏.png in Resources */,
 				CFA796651AF6427200E56796 /* kxmovie.bundle in Resources */,
 				0B3B7B071CA14BF5009112C7 /* 音量.png in Resources */,
 				0B3B7AF51CA12A38009112C7 /* 监控模式.png in Resources */,
 				0B3B7B041CA14BF5009112C7 /* 退出.png in Resources */,
 				0B3B7AF01CA12A38009112C7 /* 指挥模式.png in Resources */,
+				0B33F0F21CA272CC00465DC7 /* 九分屏.png in Resources */,
 				0B3B7B061CA14BF5009112C7 /* 显示模式.png in Resources */,
 				0B3B7B091CA15B0E009112C7 /* 向下.png in Resources */,
+				0B33F0F81CA2803800465DC7 /* 1.png in Resources */,
 				CFA795BB1AF5F1BB00E56796 /* LaunchScreen.xib in Resources */,
 				0B3B7AEF1CA12A38009112C7 /* 循环模式.png in Resources */,
 				0B3B7AEE1CA12A38009112C7 /* 会议模式.png in Resources */,

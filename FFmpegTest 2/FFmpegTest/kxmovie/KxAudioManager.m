@@ -98,6 +98,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
     }
 }
 
+
 #pragma mark - private
 
 // Debug: dump the current frame data. Limited to 20 samples.
@@ -142,7 +143,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         return NO;
     
     //_audioRoute = CFBridgingRelease(route);
-    LoggerAudio(1, @"AudioRoute: %@", _audioRoute);
+//    LoggerAudio(1, @"AudioRoute: %@", _audioRoute);
     return YES;
 }
 
@@ -238,10 +239,10 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
 
     _numBytesPerSample = _outputFormat.mBitsPerChannel / 8;
     _numOutputChannels = _outputFormat.mChannelsPerFrame;
+//    
+//    LoggerAudio(2, @"Current output bytes per sample: %ld", _numBytesPerSample);
+//    LoggerAudio(2, @"Current output num channels: %ld", _numOutputChannels);
     
-    LoggerAudio(2, @"Current output bytes per sample: %ld", _numBytesPerSample);
-    LoggerAudio(2, @"Current output num channels: %ld", _numOutputChannels);
-            
     // Slap a render callback on the unit
     AURenderCallbackStruct callbackStruct;
     callbackStruct.inputProc = renderCallback;
@@ -276,7 +277,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                    "Checking number of output channels"))
         return NO;
     
-    LoggerAudio(2, @"We've got %lu output channels", newNumChannels);
+//    LoggerAudio(2, @"We've got %lu output channels", newNumChannels);
     
     // Get the hardware sampling rate. This is settable, but here we're only reading.
     size = sizeof(_samplingRate);
@@ -287,7 +288,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         
         return NO;
     
-    LoggerAudio(2, @"Current sampling rate: %f", _samplingRate);
+//    LoggerAudio(2, @"Current sampling rate: %f", _samplingRate);
     
     size = sizeof(_outputVolume);
     if (checkError(AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareOutputVolume,
@@ -296,7 +297,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                    "Checking current hardware output volume"))
         return NO;
     
-    LoggerAudio(1, @"Current output volume: %f", _outputVolume);
+//    LoggerAudio(1, @"Current output volume: %f", _outputVolume);
     
     return YES;	
 }
@@ -309,10 +310,12 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
     }
     
     if (_playing && _outputBlock ) {
+        
     
         // Collect data to render from the callbacks
         _outputBlock(_outData, numFrames, _numOutputChannels);
         
+      
         // Put the rendered data into the output buffer
         if (_numBytesPerSample == 4) // then we've already got floats
         {
@@ -336,7 +339,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
             vDSP_vsmul(_outData, 1, &scale, _outData, 1, numFrames*_numOutputChannels);
             
 #ifdef DUMP_AUDIO_DATA
-            LoggerAudio(2, @"Buffer %u - Output Channels %u - Samples %u",
+//            LoggerAudio(2, @"Buffer %u - Output Channels %u - Samples %u",
                           (uint)ioData->mNumberBuffers, (uint)ioData->mBuffers[0].mNumberChannels, (uint)numFrames);
 #endif
 
@@ -346,6 +349,8 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                 
                 for (int iChannel = 0; iChannel < thisNumChannels; ++iChannel) {
                     vDSP_vfix16(_outData+iChannel, _numOutputChannels, (SInt16 *)ioData->mBuffers[iBuffer].mData+iChannel, thisNumChannels, numFrames);
+                 
+                    
                 }
 #ifdef DUMP_AUDIO_DATA
                 dumpAudioSamples(@"Audio frames decoded by FFmpeg and reformatted:\n",
@@ -484,13 +489,13 @@ static void sessionInterruptionListener(void *inClientData, UInt32 inInterruptio
     
 	if (inInterruption == kAudioSessionBeginInterruption) {
         
-		LoggerAudio(2, @"Begin interuption");
+//		LoggerAudio(2, @"Begin interuption");
         sm.playAfterSessionEndInterruption = sm.playing;
         [sm pause];
                 
 	} else if (inInterruption == kAudioSessionEndInterruption) {
 		
-        LoggerAudio(2, @"End interuption");
+//        LoggerAudio(2, @"End interuption");
         if (sm.playAfterSessionEndInterruption) {
             sm.playAfterSessionEndInterruption = NO;
             [sm play];
@@ -524,7 +529,7 @@ static BOOL checkError(OSStatus error, const char *operation)
 		// no, format it as an integer
 		sprintf(str, "%d", (int)error);
     
-	LoggerStream(0, @"Error: %s (%s)\n", operation, str);
+//	LoggerStream(0, @"Error: %s (%s)\n", operation, str);
     
 	//exit(1);
     

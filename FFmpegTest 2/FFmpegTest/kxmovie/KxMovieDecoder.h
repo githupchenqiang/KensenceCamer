@@ -72,6 +72,8 @@ typedef enum {
 @property (readonly, nonatomic, strong) NSData *luma;
 @property (readonly, nonatomic, strong) NSData *chromaB;
 @property (readonly, nonatomic, strong) NSData *chromaR;
+- (KxVideoFrame *) handleVideoFrame;
+
 @end
 
 @interface KxArtworkFrame : KxMovieFrame
@@ -120,6 +122,9 @@ typedef BOOL(^KxMovieDecoderInterruptCallback)();
 - (BOOL) setupVideoFrameFormat: (KxVideoFrameFormat) format;
 
 - (NSArray *) decodeFrames: (CGFloat) minDuration;
+- (void) closeVideoStream;
+
+- (KxVideoFrame *) handleVideoFrame;
 
 @end
 
@@ -129,5 +134,6 @@ typedef BOOL(^KxMovieDecoderInterruptCallback)();
 + (NSArray *) parseDialogue: (NSString *) dialogue
                   numFields: (NSUInteger) numFields;
 + (NSString *) removeCommandsFromEventText: (NSString *) text;
+
 
 @end

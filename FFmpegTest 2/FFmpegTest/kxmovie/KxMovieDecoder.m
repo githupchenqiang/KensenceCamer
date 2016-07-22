@@ -17,6 +17,7 @@
 #include "libavutil/pixdesc.h"
 #import "KxAudioManager.h"
 #import "KxLogger.h"
+#import "BaseViewController.h"
 #import <UIKit/UIKit.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,31 +49,31 @@ static NSString * errorMessage (kxMovieError errorCode)
             return @"";
             
         case kxMovieErrorOpenFile:
-            return NSLocalizedString(@"Unable to open file", nil);
+            return NSLocalizedString(@"1Unable to open file", nil);
             
         case kxMovieErrorStreamInfoNotFound:
-            return NSLocalizedString(@"Unable to find stream information", nil);
+            return NSLocalizedString(@"2Unable to find stream information", nil);
             
         case kxMovieErrorStreamNotFound:
-            return NSLocalizedString(@"Unable to find stream", nil);
+            return NSLocalizedString(@"3Unable to find stream", nil);
             
         case kxMovieErrorCodecNotFound:
-            return NSLocalizedString(@"Unable to find codec", nil);
+            return NSLocalizedString(@"4Unable to find codec", nil);
             
         case kxMovieErrorOpenCodec:
-            return NSLocalizedString(@"Unable to open codec", nil);
+            return NSLocalizedString(@"5Unable to open codec", nil);
             
         case kxMovieErrorAllocateFrame:
-            return NSLocalizedString(@"Unable to allocate frame", nil);
+            return NSLocalizedString(@"6Unable to allocate frame", nil);
             
         case kxMovieErroSetupScaler:
-            return NSLocalizedString(@"Unable to setup scaler", nil);
+            return NSLocalizedString(@"7Unable to setup scaler", nil);
             
         case kxMovieErroReSampler:
-            return NSLocalizedString(@"Unable to setup resampler", nil);
+            return NSLocalizedString(@"8Unable to setup resampler", nil);
             
         case kxMovieErroUnsupported:
-            return NSLocalizedString(@"The ability is not supported", nil);
+            return NSLocalizedString(@"9The ability is not supported", nil);
     }
 }
 
@@ -227,7 +228,7 @@ static void avStreamFPSTimeBase(AVStream *st, CGFloat defaultTimeBase, CGFloat *
         timebase = defaultTimeBase;
         
     if (st->codec->ticks_per_frame != 1) {
-        LoggerStream(0, @"WARNING: st.codec.ticks_per_frame=%d", st->codec->ticks_per_frame);
+       // LoggerStream(0, @"WARNING: st.codec.ticks_per_frame=%d", st->codec->ticks_per_frame);
         //timebase *= st->codec->ticks_per_frame;
     }
          
@@ -539,7 +540,7 @@ static int interrupt_callback(void *ctx);
         NSInteger subtitleStream = [_subtitleStreams[selected] integerValue];
         kxMovieError errCode = [self openSubtitleStream:subtitleStream];
         if (kxMovieErrorNone != errCode) {
-            LoggerStream(0, @"%@", errorMessage(errCode));
+//            LoggerStream(0, @"%@", errorMessage(errCode));
         }
     }
 }
@@ -704,13 +705,14 @@ static int interrupt_callback(void *ctx);
     KxMovieDecoder *mp = [[KxMovieDecoder alloc] init];
     if (mp) {
         [mp openFile:path error:perror];
+       
     }
     return mp;
 }
 
 - (void) dealloc
 {
-    LoggerStream(2, @"%@ dealloc", self);
+    LoggerStream(2, @"++++++++++++++++%@ dealloc", self);
     [self closeFile];
 }
 
@@ -719,6 +721,9 @@ static int interrupt_callback(void *ctx);
 - (BOOL) openFile: (NSString *) path
             error: (NSError **) perror
 {
+    if (path != nil) {
+        
+   
     NSAssert(path, @"nil path");
     NSAssert(!_formatCtx, @"already open");
     
@@ -762,9 +767,16 @@ static int interrupt_callback(void *ctx);
             *perror = kxmovieError(errCode, errMsg);
         return NO;
     }
-        
+         }else
+         {
+           
+ 
+         }
+
     return YES;
 }
+
+
 
 - (kxMovieError) openInput: (NSString *) path
 {
@@ -858,9 +870,9 @@ static int interrupt_callback(void *ctx);
     AVStream *st = _formatCtx->streams[_videoStream];
     avStreamFPSTimeBase(st, 0.04, &_fps, &_videoTimeBase);
     
-    LoggerVideo(1, @"video codec size: %d:%d fps: %.3f tb: %f",
-                self.frameWidth,
-                self.frameHeight,
+    LoggerVideo(1, @"video codec size: %lu:%lu fps: %.3f tb: %f",
+                (unsigned long)self.frameWidth,
+                (unsigned long)self.frameHeight,
                 _fps,
                 _videoTimeBase);
     
@@ -966,10 +978,10 @@ static int interrupt_callback(void *ctx);
     _subtitleStream = subtitleStream;
     _subtitleCodecCtx = codecCtx;
     
-    LoggerStream(1, @"subtitle codec: '%s' mode: %d enc: %s",
-                codecDesc->name,
-                codecCtx->sub_charenc_mode,
-                codecCtx->sub_charenc);
+//    LoggerStream(1, @"subtitle codec: '%s' mode: %d enc: %s",
+//                codecDesc->name,
+//                codecCtx->sub_charenc_mode,
+//                codecCtx->sub_charenc);
     
     _subtitleASSEvents = -1;
     
@@ -984,7 +996,7 @@ static int interrupt_callback(void *ctx);
             NSArray *fields = [KxMovieSubtitleASSParser parseEvents:s];
             if (fields.count && [fields.lastObject isEqualToString:@"Text"]) {
                 _subtitleASSEvents = fields.count;
-                LoggerStream(2, @"subtitle ass events: %@", [fields componentsJoinedByString:@","]);
+//                LoggerStream(2, @"subtitle ass events: %@", [fields componentsJoinedByString:@","]);
             }
         }
     }
@@ -1137,6 +1149,7 @@ static int interrupt_callback(void *ctx);
                                          _videoCodecCtx->height / 2);
         
         frame = yuvFrame;
+ 
     
     } else {
     
@@ -1162,6 +1175,7 @@ static int interrupt_callback(void *ctx);
         rgbFrame.rgb = [NSData dataWithBytes:_picture.data[0]
                                     length:rgbFrame.linesize * _videoCodecCtx->height];
         frame = rgbFrame;
+
     }    
     
     frame.width = _videoCodecCtx->width;
@@ -1169,11 +1183,12 @@ static int interrupt_callback(void *ctx);
     frame.position = av_frame_get_best_effort_timestamp(_videoFrame) * _videoTimeBase;
     
     const int64_t frameDuration = av_frame_get_pkt_duration(_videoFrame);
+
     if (frameDuration) {
         
         frame.duration = frameDuration * _videoTimeBase;
         frame.duration += _videoFrame->repeat_pict * _videoTimeBase * 0.5;
-        
+
         //if (_videoFrame->repeat_pict > 0) {
         //    LoggerVideo(0, @"_videoFrame.repeat_pict %d", _videoFrame->repeat_pict);
         //}
@@ -1191,6 +1206,7 @@ static int interrupt_callback(void *ctx);
                 frame.duration,
                 av_frame_get_pkt_pos(_videoFrame));
 #endif
+
     
     return frame;
 }
@@ -1321,10 +1337,10 @@ static int interrupt_callback(void *ctx);
     frame.duration = (CGFloat)(pSubtitle->end_display_time - pSubtitle->start_display_time) / 1000.f;
     
 #if 0
-    LoggerStream(2, @"SUB: %.4f %.4f | %@",
-          frame.position,
-          frame.duration,
-          frame.text);
+//    LoggerStream(2, @"SUB: %.4f %.4f | %@",
+//          frame.position,
+//          frame.duration,
+//          frame.text);
 #endif
     
     return frame;    
@@ -1346,10 +1362,13 @@ static int interrupt_callback(void *ctx);
         (_videoCodecCtx->pix_fmt == AV_PIX_FMT_YUV420P || _videoCodecCtx->pix_fmt == AV_PIX_FMT_YUVJ420P)) {
         
         _videoFrameFormat = KxVideoFrameFormatYUV;
+  
+        
         return YES;
     }
     
     _videoFrameFormat = KxVideoFrameFormatRGB;
+
     return _videoFrameFormat == format;
 }
 
@@ -1361,7 +1380,11 @@ static int interrupt_callback(void *ctx);
 
     NSMutableArray *result = [NSMutableArray array];
     
+   
+    
     AVPacket packet;
+    
+
     
     CGFloat decodedDuration = 0;
     
@@ -1371,13 +1394,14 @@ static int interrupt_callback(void *ctx);
         
         if (av_read_frame(_formatCtx, &packet) < 0) {
             _isEOF = YES;
+            
             break;
         }
         
         if (packet.stream_index ==_videoStream) {
            
             int pktSize = packet.size;
-            
+          
             while (pktSize > 0) {
                             
                 int gotframe = 0;
@@ -1386,6 +1410,7 @@ static int interrupt_callback(void *ctx);
                                                 &gotframe,
                                                 &packet);
                 
+             
                 if (len < 0) {
                     LoggerVideo(0, @"decode video error, skip packet");
                     break;
@@ -1407,9 +1432,10 @@ static int interrupt_callback(void *ctx);
                     if (frame) {
                         
                         [result addObject:frame];
-                        
+
                         _position = frame.position;
                         decodedDuration += frame.duration;
+    
                         if (decodedDuration > minDuration)
                             finished = YES;
                     }
@@ -1417,7 +1443,6 @@ static int interrupt_callback(void *ctx);
                                 
                 if (0 == len)
                     break;
-                
                 pktSize -= len;
             }
             
@@ -1432,7 +1457,6 @@ static int interrupt_callback(void *ctx);
                                                 _audioFrame,                                                
                                                 &gotframe,
                                                 &packet);
-                
                 if (len < 0) {
                     LoggerAudio(0, @"decode audio error, skip packet");
                     break;
@@ -1464,9 +1488,10 @@ static int interrupt_callback(void *ctx);
         } else if (packet.stream_index == _artworkStream) {
             
             if (packet.size) {
-
+                
                 KxArtworkFrame *frame = [[KxArtworkFrame alloc] init];
                 frame.picture = [NSData dataWithBytes:packet.data length:packet.size];
+                
                 [result addObject:frame];
             }
             
@@ -1484,7 +1509,7 @@ static int interrupt_callback(void *ctx);
                                                   &packet);
                 
                 if (len < 0) {
-                    LoggerStream(0, @"decode subtitle error, skip packet");
+//                    LoggerStream(0, @"decode subtitle error, skip packet");
                     break;
                 }
                 
@@ -1505,6 +1530,12 @@ static int interrupt_callback(void *ctx);
         }
 
         av_free_packet(&packet);
+        
+        av_frame_alloc();
+        
+       
+        
+        
 	}
 
     return result;
@@ -1521,7 +1552,7 @@ static int interrupt_callback(void *ctx)
         return 0;
     __unsafe_unretained KxMovieDecoder *p = (__bridge KxMovieDecoder *)ctx;
     const BOOL r = [p interruptDecoder];
-    if (r) LoggerStream(1, @"DEBUG: INTERRUPT_CALLBACK!");
+//    if (r) LoggerStream(1, @"DEBUG: INTERRUPT_CALLBACK!");
     return r;
 }
 
@@ -1631,17 +1662,17 @@ static void FFLog(void* context, int level, const char* format, va_list args) {
         switch (level) {
             case 0:
             case 1:
-                LoggerStream(0, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+//                LoggerStream(0, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
                 break;
             case 2:
-                LoggerStream(1, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+//                LoggerStream(1, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
                 break;
             case 3:
             case 4:
-                LoggerStream(2, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+//                LoggerStream(2, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
                 break;
             default:
-                LoggerStream(3, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+//                LoggerStream(3, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
                 break;
         }
     }

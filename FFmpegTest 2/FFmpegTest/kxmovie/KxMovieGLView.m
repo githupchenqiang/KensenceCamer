@@ -85,14 +85,14 @@ static BOOL validateProgram(GLuint prog)
     {
         GLchar *log = (GLchar *)malloc(logLength);
         glGetProgramInfoLog(prog, logLength, &logLength, log);
-        LoggerVideo(1, @"Program validate log:\n%s", log);
+//        LoggerVideo(1, @"Program validate log:\n%s", log);
         free(log);
     }
 #endif
     
     glGetProgramiv(prog, GL_VALIDATE_STATUS, &status);
     if (status == GL_FALSE) {
-		LoggerVideo(0, @"Failed to validate program %d", prog);
+//		LoggerVideo(0, @"Failed to validate program %d", prog);
         return NO;
     }
 	
@@ -106,7 +106,7 @@ static GLuint compileShader(GLenum type, NSString *shaderString)
 	
     GLuint shader = glCreateShader(type);
     if (shader == 0 || shader == GL_INVALID_ENUM) {
-        LoggerVideo(0, @"Failed to create shader %d", type);
+//        LoggerVideo(0, @"Failed to create shader %d", type);
         return 0;
     }
     
@@ -120,7 +120,7 @@ static GLuint compileShader(GLenum type, NSString *shaderString)
     {
         GLchar *log = (GLchar *)malloc(logLength);
         glGetShaderInfoLog(shader, logLength, &logLength, log);
-        LoggerVideo(1, @"Shader compile log:\n%s", log);
+//        LoggerVideo(1, @"Shader compile log:\n%s", log);
         free(log);
     }
 #endif
@@ -128,13 +128,16 @@ static GLuint compileShader(GLenum type, NSString *shaderString)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (status == GL_FALSE) {
         glDeleteShader(shader);
-		LoggerVideo(0, @"Failed to compile shader:\n");
+//		LoggerVideo(0, @"Failed to compile shader:\n");
         return 0;
     }
     
 	return shader;
 }
 
+
+
+///
 static void mat4f_LoadOrtho(float left, float right, float bottom, float top, float near, float far, float* mout)
 {
 	float r_l = right - left;
@@ -278,6 +281,9 @@ static void mat4f_LoadOrtho(float left, float right, float bottom, float top, fl
     _uniformSamplers[2] = glGetUniformLocation(program, "s_texture_v");
 }
 
+
+
+///在执行
 - (void) setFrame: (KxVideoFrame *) frame
 {
     KxVideoFrameYUV *yuvFrame = (KxVideoFrameYUV *)frame;
@@ -288,15 +294,14 @@ static void mat4f_LoadOrtho(float left, float right, float bottom, float top, fl
 
     const NSUInteger frameWidth = frame.width;
     const NSUInteger frameHeight = frame.height;
-    
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
     if (0 == _textures[0])
         glGenTextures(3, _textures);
 
     const UInt8 *pixels[3] = { yuvFrame.luma.bytes, yuvFrame.chromaB.bytes, yuvFrame.chromaR.bytes };
-    const NSUInteger widths[3]  = { frameWidth, frameWidth / 2, frameWidth / 2 };
-    const NSUInteger heights[3] = { frameHeight, frameHeight / 2, frameHeight / 2 };
+    const NSUInteger widths[3]  = {frameWidth, frameWidth / 2, frameWidth / 2 };
+    const NSUInteger heights[3] = {frameHeight, frameHeight / 2, frameHeight / 2 };
     
     for (int i = 0; i < 3; ++i) {
         
@@ -319,12 +324,15 @@ static void mat4f_LoadOrtho(float left, float right, float bottom, float top, fl
     }     
 }
 
+
+//在执行
 - (BOOL) prepareRender
 {
     if (_textures[0] == 0)
         return NO;
+    printf("");
     
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 10; ++i) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, _textures[i]);
         glUniform1i(_uniformSamplers[i], i);
@@ -352,7 +360,7 @@ enum {
 
 @implementation KxMovieGLView {
     
-    KxMovieDecoder  *_decoder;
+   
     EAGLContext     *_context;
     GLuint          _framebuffer;
     GLuint          _renderbuffer;
@@ -360,7 +368,7 @@ enum {
     GLint           _backingHeight;
     GLuint          _program;
     GLint           _uniformMatrix;
-    GLfloat         _vertices[8];
+    GLfloat         _vertices[19];
     
     id<KxMovieGLRenderer> _renderer;
 }
@@ -376,17 +384,21 @@ enum {
     self = [super initWithFrame:frame];
     if (self) {
         
-        _decoder = decoder;
+        self.decoder = decoder;
         
         if ([decoder setupVideoFrameFormat:KxVideoFrameFormatYUV]) {
             
             _renderer = [[KxMovieGLRenderer_YUV alloc] init];
-            LoggerVideo(1, @"OK use YUV GL renderer");
+//            LoggerVideo(1, @"OK use YUV GL renderer");
+            
+            
             
         } else {
             
             _renderer = [[KxMovieGLRenderer_RGB alloc] init];
-            LoggerVideo(1, @"OK use RGB GL renderer");
+            
+          
+//            LoggerVideo(1, @"OK use RGB GL renderer");
         }
                 
         CAEAGLLayer *eaglLayer = (CAEAGLLayer*) self.layer;
@@ -401,7 +413,8 @@ enum {
         if (!_context ||
             ![EAGLContext setCurrentContext:_context]) {
             
-            LoggerVideo(0, @"failed to setup EAGLContext");
+           
+//            LoggerVideo(0, @"failed to setup EAGLContext");
             self = nil;
             return nil;
         }
@@ -418,15 +431,14 @@ enum {
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             
-            LoggerVideo(0, @"failed to make complete framebuffer object %x", status);
+//            LoggerVideo(0, @"failed to make complete framebuffer object %x", status);
             self = nil;
             return nil;
         }
-        
         GLenum glError = glGetError();
         if (GL_NO_ERROR != glError) {
             
-            LoggerVideo(0, @"failed to setup GL %x", glError);
+//            LoggerVideo(0, @"failed to setup GL %x", glError);
             self = nil;
             return nil;
         }
@@ -439,14 +451,18 @@ enum {
         
         _vertices[0] = -1.0f;  // x0
         _vertices[1] = -1.0f;  // y0
-        _vertices[2] =  1.0f;  // ..
-        _vertices[3] = -1.0f;
-        _vertices[4] = -1.0f;
-        _vertices[5] =  1.0f;
+        _vertices[2] =  1.0f;  // x1
+        _vertices[3] = -1.0f;  // Y1
+        _vertices[4] = -1.0f;  // X2
+        _vertices[5] =  1.0f;  // Y2
         _vertices[6] =  1.0f;  // x3
         _vertices[7] =  1.0f;  // y3
-        
+        _vertices[8] =  1.0f;
+        _vertices[9] =  1.0f;
+        _vertices[10] = 1.0f;
+        _vertices[11] = 1.0f;
         LoggerVideo(1, @"OK setup GL");
+        
     }
     
     return self;
@@ -476,6 +492,8 @@ enum {
 	}
     
 	_context = nil;
+    
+   
 }
 
 - (void)layoutSubviews
@@ -484,19 +502,21 @@ enum {
     [_context renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer*)self.layer];
 	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &_backingWidth);
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &_backingHeight);
-	
+  
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		
-        LoggerVideo(0, @"failed to make complete framebuffer object %x", status);
+//        LoggerVideo(0, @"failed to make complete framebuffer object %x", status);
         
 	} else {
         
-        LoggerVideo(1, @"OK setup GL framebuffer %d:%d", _backingWidth, _backingHeight);
+// LoggerVideo(1, @"OK setup GL framebuffer %d:%d", _backingWidth, _backingHeight);
     }
     
     [self updateVertices];
     [self render: nil];
+
+    
 }
 
 - (void)setContentMode:(UIViewContentMode)contentMode
@@ -505,6 +525,7 @@ enum {
     [self updateVertices];
     if (_renderer.isValid)
         [self render:nil];
+  
 }
 
 - (BOOL)loadShaders
@@ -532,7 +553,7 @@ enum {
     GLint status;
     glGetProgramiv(_program, GL_LINK_STATUS, &status);
     if (status == GL_FALSE) {
-		LoggerVideo(0, @"Failed to link program %d", _program);
+//		LoggerVideo(0, @"Failed to link program %d", _program);
         goto exit;
     }
     
@@ -550,7 +571,7 @@ exit:
     
     if (result) {
         
-        LoggerVideo(1, @"OK setup GL programm");
+//        LoggerVideo(1, @"OK setup GL programm");
         
     } else {
         
@@ -580,8 +601,12 @@ exit:
     _vertices[5] =   h;
     _vertices[6] =   w;
     _vertices[7] =   h;
+
+  
 }
 
+
+   ////在执行
 - (void)render: (KxVideoFrame *) frame
 {        
     static const GLfloat texCoords[] = {
@@ -595,6 +620,7 @@ exit:
     
     glBindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
     glViewport(0, 0, _backingWidth, _backingHeight);
+    
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(_program);
@@ -617,7 +643,7 @@ exit:
     #if 0
         if (!validateProgram(_program))
         {
-            LoggerVideo(0, @"Failed to validate program");
+//            LoggerVideo(0, @"Failed to validate program");
             return;
         }
     #endif
@@ -627,6 +653,11 @@ exit:
     
     glBindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
     [_context presentRenderbuffer:GL_RENDERBUFFER];
+
+//    NSLog(@"%@",_context);
+    
+    
+    
 }
 
 @end

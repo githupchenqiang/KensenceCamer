@@ -49,7 +49,12 @@
 //                      @"http://liveipad.wasu.cn/cctv2_ipad/z.m3u8",
 //                      @"http://www.wowza.com/_h264/BigBuckBunny_175k.mov",
 //                      @"http://www.wowza.com/_h264/BigBuckBunny_115k.mov",
-                        @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
+//                        @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
+                      
+                                        @"rtsp://admin:admin123@192.168.1.64:554/ISAPI/streaming/channels/102",
+                        
+                                        @"rtsp://admin:admin123@192.168.1.64:554/ISAPI/streaming/channels/102",
+                        
 //                      @"http://santai.tv/vod/test/test_format_1.3gp",
 //                      @"http://santai.tv/vod/test/test_format_1.mp4",
 //                      
@@ -59,7 +64,7 @@
 //                      @"rtmp://aragontvlivefs.fplive.net/aragontvlive-live/stream_normal_abt",
 //                      @"rtmp://ucaster.eu:1935/live/_definst_/discoverylacajatv",
 //                      @"rtmp://edge01.fms.dutchview.nl/botr/bunny.flv"
-                        @"rtsp://192.168.1.42:8554/003.mkv"
+//                        @"rtsp://192.168.1.42:8554/003.mkv"
                       ];
     
 
@@ -80,6 +85,9 @@
 {
     [super didReceiveMemoryWarning];
 }
+
+
+
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {

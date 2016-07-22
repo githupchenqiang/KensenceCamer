@@ -11,7 +11,9 @@
 //#import ""
 #import "KxMovieViewController.h"
 #import "BaseViewController.h"
+#import "ViewController.h"
 
+#import "LoginViewController.h"
 
 @interface AppDelegate ()
 
@@ -23,25 +25,69 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     
 //    KxMovieViewController *VC = [KxMovieViewController movieViewControllerWithContentPath:@"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov" parameters:parameters];
     
-    BaseViewController *baseVC = [[BaseViewController alloc]init];
+//    ViewController *view = [[ViewController alloc]init];
+    if (![[NSUserDefaults standardUserDefaults]objectForKey:@"appLanguage"]) {
+        NSArray *langusges = [NSLocale preferredLanguages];
+        NSString *language = [langusges objectAtIndex:0];
+        if ([language hasPrefix:@"zh-Hans"]) {//开头匹配
+            
+            [[NSUserDefaults standardUserDefaults] setObject:@"zh-Hans" forKey:@"appLanguage"];
+            
+        }else{
+            
+            [[NSUserDefaults standardUserDefaults] setObject:@"en" forKey:@"appLanguage"];
+            
+        }    }
 
+    BaseViewController *baseVC = [[BaseViewController alloc]init];
     self.window.backgroundColor = [UIColor whiteColor];
 
-    UINavigationController *Nav = [[UINavigationController alloc]initWithRootViewController:baseVC];
-    
-    self.window.rootViewController = Nav;
+    UINavigationController *Nav = [[UINavigationController alloc]initWithRootViewController:baseVC
+                                   ];
+    [Nav.navigationBar setBackgroundColor:[UIColor colorWithRed:93/255.0 green:164/255.0 blue:213/255.0 alpha:1]];
+    LoginViewController *Login = [[LoginViewController alloc]init];
+    self.window.rootViewController = Login;
     [self.window makeKeyAndVisible];
-    
-    
-//
-    
-    
     return YES;
 }
+
++ (UIViewController*) viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents
+                                                            coder:(NSCoder *)coder {
+    LoginViewController *Login;
+    UIStoryboard* sb = [coder decodeObjectForKey:UIStateRestorationViewControllerStoryboardKey];
+    if (sb) {
+        Login = (LoginViewController*)[sb instantiateViewControllerWithIdentifier:@"Login"];
+        Login.restorationIdentifier = [identifierComponents lastObject];
+        Login.restorationClass = [LoginViewController class];
+    }
+    return Login;
+}
+
+
+-(void)toMain
+{
+    self.Login = [LoginViewController new];
+    self.window.rootViewController = self.Login;
+}
+
+
+
+
+
+-(void)showWindowHome:(NSString *)windowType{
+    
+    if([windowType isEqualToString:@"logout"]){
+        
+        LoginViewController *loginVC = [[LoginViewController alloc] init];
+//        loginVC.restorationIdentifier = [identifierComponents lastObject];
+        self.window.rootViewController = loginVC;
+        
+    }
+}
+
 
 - (void)applicationWillResignActive:(UIApplication *)application {
 

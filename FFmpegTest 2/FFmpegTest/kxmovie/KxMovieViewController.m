@@ -1,4 +1,4 @@
- //
+  //
 //  ViewController.m
 //  kxmovieapp
 //
@@ -16,6 +16,8 @@
 #import "KxAudioManager.h"
 #import "KxMovieGLView.h"
 #import "KxLogger.h"
+#import "BaseViewController.h"
+
 
 NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
 NSString * const KxMovieParameterMaxBufferedDuration = @"KxMovieParameterMaxBufferedDuration";
@@ -74,7 +76,7 @@ static NSMutableDictionary * gHistory;
 
     KxMovieDecoder      *_decoder;    
     dispatch_queue_t    _dispatchQueue;
-    NSMutableArray      *_videoFrames;
+//    NSMutableArray      *_videoFrames;
     NSMutableArray      *_audioFrames;
     NSMutableArray      *_subtitles;
     NSData              *_currentAudioFrame;
@@ -91,7 +93,7 @@ static NSMutableDictionary * gHistory;
     BOOL                _restoreIdleTimer;
     BOOL                _interrupted;
 
-    KxMovieGLView       *_glView;
+   
     UIImageView         *_imageView;
     UIView              *_topHUD;
     UIToolbar           *_topBar;
@@ -137,6 +139,8 @@ static NSMutableDictionary * gHistory;
 @property (readwrite) BOOL playing;
 @property (readwrite) BOOL decoding;
 @property (readwrite, strong) KxArtworkFrame *artworkFrame;
+@property (nonatomic ,strong)NSString *path;
+
 @end
 
 @implementation KxMovieViewController
@@ -145,13 +149,18 @@ static NSMutableDictionary * gHistory;
 {
     if (!gHistory)
         gHistory = [NSMutableDictionary dictionary];
+
 }
 
-- (BOOL)prefersStatusBarHidden { return YES; }
+- (BOOL)prefersStatusBarHidden {
+
+    return YES;
+}
 
 + (id) movieViewControllerWithContentPath: (NSString *) path
                                parameters: (NSDictionary *) parameters
-{    
+{
+    
     id<KxAudioManager> audioManager = [KxAudioManager audioManager];
     [audioManager activateAudioSession];    
     return [[KxMovieViewController alloc] initWithContentPath: path parameters: parameters];
@@ -160,6 +169,7 @@ static NSMutableDictionary * gHistory;
 - (id) initWithContentPath: (NSString *) path
                 parameters: (NSDictionary *) parameters
 {
+    
     NSAssert(path.length > 0, @"empty path");
     
     self = [super initWithNibName:nil bundle:nil];
@@ -185,13 +195,14 @@ static NSMutableDictionary * gHistory;
     
             NSError *error = nil;
             [decoder openFile:path error:&error];
-                        
+            _path = path;
+            
             __strong KxMovieViewController *strongSelf = weakSelf;
             if (strongSelf) {
                 
                 dispatch_sync(dispatch_get_main_queue(), ^{
                     
-                    [strongSelf setMovieDecoder:decoder withError:error];                    
+                [strongSelf setMovieDecoder:decoder withError:error];                    
                 });
             }
         });
@@ -202,8 +213,7 @@ static NSMutableDictionary * gHistory;
 - (void) dealloc
 {
     [self pause];
-    
-    
+
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     if (_dispatchQueue) {
@@ -212,11 +222,13 @@ static NSMutableDictionary * gHistory;
         _dispatchQueue = NULL;
     }
     
-    LoggerStream(1, @"%@ dealloc", self);
+    
+    LoggerStream(1, @"================%@ dealloc", self);
 }
 - (void)loadView
 {
-    // LoggerStream(1, @"loadView");
+    
+    LoggerStream(1, @"=====loadView");
     CGRect bounds = [[UIScreen mainScreen] bounds];
     
     self.view = [[UIView alloc] initWithFrame:bounds];
@@ -366,30 +378,35 @@ _messageLabel.hidden = YES;
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    
+
     if (self.playing) {
         
         [self pause];
         [self freeBufferedFrames];
         
-        if (_maxBufferedDuration > 0) {
+        if (_maxBufferedDuration >= 0) {
             
             _minBufferedDuration = _maxBufferedDuration = 0;
+           
             [self play];
             
-            LoggerStream(0, @"didReceiveMemoryWarning, disable buffering and continue playing");
+//            LoggerStream(0, @"didReceiveMemoryWarning, disable buffering and continue playing");
+            
             
         } else {
             
             // force ffmpeg to free allocated memory
             [_decoder closeFile];
-            [_decoder openFile:nil error:nil];
+            [_decoder openFile:_path error:nil];
             
             [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
                                         message:NSLocalizedString(@"Out of memory", nil)
                                        delegate:nil
                               cancelButtonTitle:NSLocalizedString(@"Close", nil)
                               otherButtonTitles:nil] show];
+            [self play];
+            
+            
         }
         
     } else {
@@ -403,18 +420,18 @@ _messageLabel.hidden = YES;
 - (void) viewDidAppear:(BOOL)animated
 {
     // LoggerStream(1, @"viewDidAppear");
-    
+
     [super viewDidAppear:animated];
         
     if (self.presentingViewController)
-        [self fullscreenMode:YES];
+//        [self fullscreenMode:YES];
     
     if (_infoMode)
         [self showInfoView:NO animated:NO];
     
     _savedIdleTimer = [[UIApplication sharedApplication] isIdleTimerDisabled];
     
-    [self showHUD: YES];
+//    [self showHUD: YES];
     
     if (_decoder) {
         
@@ -433,7 +450,8 @@ _messageLabel.hidden = YES;
 }
 
 - (void) viewWillDisappear:(BOOL)animated
-{    
+{
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     [super viewWillDisappear:animated];
@@ -463,8 +481,10 @@ _messageLabel.hidden = YES;
     LoggerStream(1, @"viewWillDisappear %@", self);
 }
 
+
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
+    
     return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
@@ -473,13 +493,14 @@ _messageLabel.hidden = YES;
     [self showHUD:YES];
     [self pause];
     
-    LoggerStream(1, @"applicationWillResignActive");
+//    LoggerStream(1, @"applicationWillResignActive");
 }
 
 #pragma mark - gesture recognizer
 
 - (void) handleTap: (UITapGestureRecognizer *) sender
 {
+    
     if (sender.state == UIGestureRecognizerStateEnded) {
         
         if (sender == _tapGestureRecognizer) {
@@ -553,7 +574,7 @@ _messageLabel.hidden = YES;
     if (_decoder.validAudio)
         [self enableAudio:YES];
 
-    LoggerStream(1, @"play movie");
+//    LoggerStream(1, @"play movie");
 }
 
 - (void) pause
@@ -562,10 +583,10 @@ _messageLabel.hidden = YES;
         return;
 
     self.playing = NO;
-    //_interrupted = YES;
+    _interrupted = YES;
     [self enableAudio:NO];
     [self updatePlayButton];
-    LoggerStream(1, @"pause movie");
+//    LoggerStream(1, @"pause movie");
 }
 
 - (void) setMoviePosition: (CGFloat) position
@@ -600,6 +621,7 @@ _messageLabel.hidden = YES;
 
 - (void) playDidTouch: (id) sender
 {
+    
     if (self.playing)
         [self pause];
     else
@@ -608,11 +630,13 @@ _messageLabel.hidden = YES;
 
 - (void) forwardDidTouch: (id) sender
 {
+    
     [self setMoviePosition: _moviePosition + 10];
 }
 
 - (void) rewindDidTouch: (id) sender
 {
+    
     [self setMoviePosition: _moviePosition - 10];
 }
 
@@ -628,14 +652,16 @@ _messageLabel.hidden = YES;
 - (void) setMovieDecoder: (KxMovieDecoder *) decoder
                withError: (NSError *) error
 {
-    LoggerStream(2, @"setMovieDecoder");
-            
+//    LoggerStream(2, @"setMovieDecoder");
+    
     if (!error && decoder) {
         
         _decoder        = decoder;
         _dispatchQueue  = dispatch_queue_create("KxMovie", DISPATCH_QUEUE_SERIAL);
         _videoFrames    = [NSMutableArray array];
         _audioFrames    = [NSMutableArray array];
+        
+      
         
         if (_decoder.subtitleStreamsCount) {
             _subtitles = [NSMutableArray array];
@@ -658,6 +684,7 @@ _messageLabel.hidden = YES;
         // allow to tweak some parameters at runtime
         if (_parameters.count) {
             
+            
             id val;
             
             val = [_parameters valueForKey: KxMovieParameterMinBufferedDuration];
@@ -676,7 +703,7 @@ _messageLabel.hidden = YES;
                 _maxBufferedDuration = _minBufferedDuration * 2;
         }
         
-        LoggerStream(2, @"buffered limit: %.1f - %.1f", _minBufferedDuration, _maxBufferedDuration);
+//        LoggerStream(2, @"buffered limit: %.1f - %.1f", _minBufferedDuration, _maxBufferedDuration);
         
         if (self.isViewLoaded) {
             
@@ -704,6 +731,7 @@ _messageLabel.hidden = YES;
                  [self handleDecoderMovieError: error];
          }
     }
+    
 }
 
 - (void) restorePlay
@@ -721,13 +749,16 @@ _messageLabel.hidden = YES;
     
     if (_decoder.validVideo) {
         _glView = [[KxMovieGLView alloc] initWithFrame:bounds decoder:_decoder];
-    } 
+     
+    }
     
     if (!_glView) {
-        
+    
+
         LoggerVideo(0, @"fallback to use RGB video frame and UIKit");
         [_decoder setupVideoFrameFormat:KxVideoFrameFormatRGB];
         _imageView = [[UIImageView alloc] initWithFrame:bounds];
+ 
         
         _imageView.backgroundColor = [UIColor blackColor];
     }
@@ -737,7 +768,8 @@ _messageLabel.hidden = YES;
     frameView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleBottomMargin;
     
     [self.view insertSubview:frameView atIndex:0];
-        
+ 
+
     if (_decoder.validVideo) {
     
         [self setupUserInteraction];
@@ -746,8 +778,8 @@ _messageLabel.hidden = YES;
        
         _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
         _imageView.contentMode = UIViewContentModeCenter;
+     
     }
-    
     self.view.backgroundColor = [UIColor clearColor];
     
     if (_decoder.duration == MAXFLOAT) {
@@ -794,6 +826,7 @@ _messageLabel.hidden = YES;
 
 - (void) setupUserInteraction
 {
+    
     UIView * view = [self frameView];
     view.userInteractionEnabled = YES;
     
@@ -805,8 +838,8 @@ _messageLabel.hidden = YES;
     
     [_tapGestureRecognizer requireGestureRecognizerToFail: _doubleTapGestureRecognizer];
     
-    [view addGestureRecognizer:_doubleTapGestureRecognizer];
-    [view addGestureRecognizer:_tapGestureRecognizer];
+//    [view addGestureRecognizer:_doubleTapGestureRecognizer];
+//    [view addGestureRecognizer:_tapGestureRecognizer];
     
 //    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
 //    _panGestureRecognizer.enabled = NO;
@@ -816,18 +849,29 @@ _messageLabel.hidden = YES;
 
 - (UIView *) frameView
 {
-    _glView.contentMode = UIViewContentModeScaleAspectFill;
+ 
     
-    return _glView; //? _glView : _imageView;
+    
+    _glView.contentMode = UIViewContentModeScaleAspectFill;
+ 
+    NSLog(@"=====1");
+    
+    
+    return _glView? _glView : _imageView;
+
+
 }
 
+
+#warning =====在执行=====
 - (void) audioCallbackFillData: (float *) outData
                      numFrames: (UInt32) numFrames
                    numChannels: (UInt32) numChannels
 {
     //fillSignalF(outData,numFrames,numChannels);
     //return;
-
+    
+ 
     if (_buffered) {
         memset(outData, 0, numFrames * numChannels * sizeof(float));
         return;
@@ -858,15 +902,13 @@ _messageLabel.hidden = YES;
                                 
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
 #ifdef DEBUG
-                                LoggerStream(0, @"=======desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+//                                LoggerStream(0, @"=======desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 1;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
 //                                break; // silence and exit
                                 
                                 [_debugAudioStatusTS self];
-                                
-                                
                             }
                             
                             [_audioFrames removeObjectAtIndex:0];
@@ -874,7 +916,7 @@ _messageLabel.hidden = YES;
                             if (delta > 0.1 && count > 1) {
                                 
 #ifdef DEBUG
-                                LoggerStream(0, @"+++++++desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+//                                LoggerStream(0, @"+++++++desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 2;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -948,10 +990,16 @@ _messageLabel.hidden = YES;
         [audioManager pause];
         audioManager.outputBlock = nil;
     }
+    
+   
+    
 }
 
+#warning ====执行中====
 - (BOOL) addFrames: (NSArray *)frames
 {
+    
+
     if (_decoder.validVideo) {
         
         @synchronized(_videoFrames) {
@@ -960,6 +1008,7 @@ _messageLabel.hidden = YES;
                 if (frame.type == KxMovieFrameTypeVideo) {
                     [_videoFrames addObject:frame];
                     _bufferedDuration += frame.duration;
+                   
                 }
         }
     }
@@ -973,6 +1022,7 @@ _messageLabel.hidden = YES;
                     [_audioFrames addObject:frame];
                     if (!_decoder.validVideo)
                         _bufferedDuration += frame.duration;
+                   
                 }
         }
         
@@ -981,6 +1031,7 @@ _messageLabel.hidden = YES;
             for (KxMovieFrame *frame in frames)
                 if (frame.type == KxMovieFrameTypeArtwork)
                     self.artworkFrame = (KxArtworkFrame *)frame;
+           
         }
     }
     
@@ -991,6 +1042,7 @@ _messageLabel.hidden = YES;
             for (KxMovieFrame *frame in frames)
                 if (frame.type == KxMovieFrameTypeSubtitle) {
                     [_subtitles addObject:frame];
+                  
                 }
         }
     }
@@ -1000,7 +1052,7 @@ _messageLabel.hidden = YES;
 
 - (BOOL) decodeFrames
 {
-    //NSAssert(dispatch_get_current_queue() == _dispatchQueue, @"bugcheck");
+    NSAssert(dispatch_get_current_queue() == _dispatchQueue, @"bugcheck");
     
     NSArray *frames = nil;
     
@@ -1018,8 +1070,13 @@ _messageLabel.hidden = YES;
 
 - (void) asyncDecodeFrames
 {
+    
     if (self.decoding)
         return;
+    
+    
+    
+    
     
     __weak KxMovieViewController *weakSelf = self;
     __weak KxMovieDecoder *weakDecoder = _decoder;
@@ -1049,6 +1106,7 @@ _messageLabel.hidden = YES;
                     NSArray *frames = [decoder decodeFrames:duration];
                     if (frames.count) {
                         
+                        
                         __strong KxMovieViewController *strongSelf = weakSelf;
                         if (strongSelf)
                             good = [strongSelf addFrames:frames];
@@ -1064,8 +1122,11 @@ _messageLabel.hidden = YES;
     });
 }
 
+
+#warning ====执行中=====
 - (void) tick
 {
+    
     if (_buffered && ((_bufferedDuration > _minBufferedDuration) || _decoder.isEOF)) {
         
         _tickCorrectionTime = 0;
@@ -1118,8 +1179,11 @@ _messageLabel.hidden = YES;
     }
 }
 
+#warning ====执行中===
 - (CGFloat) tickCorrection
 {
+
+    
     if (_buffered)
         return 0;
     
@@ -1141,7 +1205,7 @@ _messageLabel.hidden = YES;
     
     if (correction > 1.f || correction < -1.f) {
         
-        LoggerStream(1, @"tick correction reset %.2f", correction);
+//        LoggerStream(1, @"tick correction reset %.2f", correction);
         correction = 0;
         _tickCorrectionTime = 0;
     }
@@ -1151,6 +1215,7 @@ _messageLabel.hidden = YES;
 
 - (CGFloat) presentFrame
 {
+    
     CGFloat interval = 0;
     
     if (_decoder.validVideo) {
@@ -1162,6 +1227,7 @@ _messageLabel.hidden = YES;
             if (_videoFrames.count > 0) {
                 
                 frame = _videoFrames[0];
+              
                 [_videoFrames removeObjectAtIndex:0];
                 _bufferedDuration -= frame.duration;
             }
@@ -1178,6 +1244,10 @@ _messageLabel.hidden = YES;
             
             _imageView.image = [self.artworkFrame asImage];
             self.artworkFrame = nil;
+           
+            
+            
+            
         }
     }
 
@@ -1192,26 +1262,38 @@ _messageLabel.hidden = YES;
     return interval;
 }
 
+//在执行
 - (CGFloat) presentVideoFrame: (KxVideoFrame *) frame
 {
+    
     if (_glView) {
         
         [_glView render:frame];
-        _glView.backgroundColor = [UIColor whiteColor];
         
+//NSLog(@"%@",[_glView render:frame]);
+        _glView.backgroundColor = [UIColor whiteColor];
+       
     } else {
         
         KxVideoFrameRGB *rgbFrame = (KxVideoFrameRGB *)frame;
         _imageView.image = [rgbFrame asImage];
+     
     }
     
     _moviePosition = frame.position;
-        
+//    NSLog(@"*************");
+//    
+//    NSLog(@"%f",_moviePosition);
+//    
+//    NSLog(@"***************");
+//    
+    
     return frame.duration;
 }
 
 - (void) presentSubtitles
 {
+    
     NSArray *actual, *outdated;
     
     if ([self subtitleForPosition:_moviePosition
@@ -1256,6 +1338,7 @@ _messageLabel.hidden = YES;
                       actual: (NSArray **) pActual
                     outdated: (NSArray **) pOutdated
 {
+  
     if (!_subtitles.count)
         return NO;
     
@@ -1294,6 +1377,8 @@ _messageLabel.hidden = YES;
 
 - (void) updateBottomBar
 {
+    
+    
     UIBarButtonItem *playPauseBtn = self.playing ? _pauseBtn : _playBtn;
     [_bottomBar setItems:@[_spaceItem, _rewindBtn, _fixedSpaceItem, playPauseBtn,
                            _fixedSpaceItem, _fforwardBtn, _spaceItem] animated:NO];
@@ -1301,9 +1386,12 @@ _messageLabel.hidden = YES;
 
 - (void) updatePlayButton
 {
+    
     [self updateBottomBar];
 }
 
+
+//在执行
 - (void) updateHUD
 {
     if (_disableUpdateHUD)
@@ -1327,7 +1415,7 @@ _messageLabel.hidden = YES;
     
     if (_debugAudioStatus) {
         
-        if (NSOrderedAscending == [_debugAudioStatusTS compare: [NSDate dateWithTimeIntervalSinceNow:-0.5]]) {
+        if (NSOrderedAscending == [_debugAudioStatusTS compare: [NSDate dateWithTimeIntervalSinceNow:0]]) {
             _debugAudioStatus = 0;
         }
     }
@@ -1352,7 +1440,8 @@ _messageLabel.hidden = YES;
 
 - (void) showHUD: (BOOL) show
 {
-    _hiddenHUD = !show;    
+    
+    _hiddenHUD = !show;
     _panGestureRecognizer.enabled = _hiddenHUD;
         
     [[UIApplication sharedApplication] setIdleTimerDisabled:_hiddenHUD];
@@ -1384,11 +1473,13 @@ _messageLabel.hidden = YES;
 
 - (void) setMoviePositionFromDecoder
 {
+    
     _moviePosition = _decoder.position;
 }
 
 - (void) setDecoderPosition: (CGFloat) position
 {
+    
     _decoder.position = position;
 }
 
@@ -1451,6 +1542,7 @@ _messageLabel.hidden = YES;
 
 - (void) freeBufferedFrames
 {
+    
     @synchronized(_videoFrames) {
         [_videoFrames removeAllObjects];
     }
@@ -1531,7 +1623,8 @@ _messageLabel.hidden = YES;
 }
 
 - (void) createTableView
-{    
+{
+    
     _tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
     _tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth |UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleBottomMargin;
     _tableView.delegate = self;
@@ -1550,11 +1643,15 @@ _messageLabel.hidden = YES;
 
 - (void) handleDecoderMovieError: (NSError *) error
 {
+    
+    
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
                                                         message:[error localizedDescription]
                                                        delegate:nil
                                               cancelButtonTitle:NSLocalizedString(@"Close", nil)
                                               otherButtonTitles:nil];
+    
+    
     
     [alertView show];
 }
@@ -1570,6 +1667,7 @@ _messageLabel.hidden = YES;
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
+    
     return KxMovieInfoSectionCount;
 }
 
@@ -1630,6 +1728,7 @@ _messageLabel.hidden = YES;
 - (id) mkCell: (NSString *) cellIdentifier
     withStyle: (UITableViewCellStyle) style
 {
+    
     UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:style reuseIdentifier:cellIdentifier];
